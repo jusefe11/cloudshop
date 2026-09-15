@@ -2,7 +2,7 @@ frontend:
   replicaCount: 2
 
 product:
-  replicaCount: 3
+  replicaCount: 4
 
 order:
   replicaCount: 2
