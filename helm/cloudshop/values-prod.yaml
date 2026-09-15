@@ -1,5 +1,7 @@
 frontend:
   replicaCount: 2
+  image:
+    tag: v2
 
 product:
   replicaCount: 4
