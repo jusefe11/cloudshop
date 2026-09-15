@@ -1,10 +1,5 @@
 frontend:
   replicaCount: 2
+  appTitle: "Tienda de Juan Sebastián Ferrer"
   image:
-    tag: v3
-
-product:
-  replicaCount: 4
-
-order:
-  replicaCount: 2
+    tag: v4

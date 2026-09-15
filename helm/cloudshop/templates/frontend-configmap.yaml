@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: cloudshop
+data:
+  config.js: |
+    window.CLOUDSHOP_CONFIG = {
+      APP_TITLE: {{ .Values.frontend.appTitle | quote }}
+    };

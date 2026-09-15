@@ -81,12 +81,13 @@ code {
     }
 }
 </style>
+    <script src="/config.js"></script>
 </head>
 
 <body>
 
 <header>
-    <h1>☁️ CloudShop</h1>
+    <h1>☁️ <span id="store-title">CloudShop</span></h1>
     <p>Microservices & GitOps Dashboard</p>
 </header>
 
@@ -334,5 +335,11 @@ loadOrders();
 
 </script>
 
+    <script>
+      if (window.CLOUDSHOP_CONFIG && window.CLOUDSHOP_CONFIG.APP_TITLE) {
+        document.getElementById("store-title").textContent = window.CLOUDSHOP_CONFIG.APP_TITLE;
+        document.title = window.CLOUDSHOP_CONFIG.APP_TITLE;
+      }
+    </script>
 </body>
 </html>
