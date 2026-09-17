@@ -1,5 +1,7 @@
-# ☁️ CloudShop — DevOps & GitOps Project
+# ☁️ CloudShop — AWS DevOps & GitOps Lab
 
+![AWS](https://img.shields.io/badge/AWS-Cloud-orange?logo=amazonwebservices)
+![Terraform](https://img.shields.io/badge/Terraform-IaC-purple?logo=terraform)
 ![Docker](https://img.shields.io/badge/Docker-Containers-blue?logo=docker)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-Orchestration-blue?logo=kubernetes)
 ![Helm](https://img.shields.io/badge/Helm-Package_Manager-blue?logo=helm)
@@ -8,13 +10,13 @@
 ![Nginx](https://img.shields.io/badge/Nginx-Frontend-green?logo=nginx)
 ![Python](https://img.shields.io/badge/Python-Flask-yellow?logo=python)
 
-CloudShop es un laboratorio DevOps basado en una arquitectura de microservicios, diseñado para implementar y demostrar un flujo completo de contenerización, orquestación con Kubernetes, despliegues con Helm y GitOps mediante Argo CD.
+CloudShop es un laboratorio práctico de **Cloud, DevOps y GitOps** basado en una arquitectura de microservicios.
 
-El proyecto permite administrar toda la infraestructura de la aplicación de forma declarativa desde Git.
+El proyecto comenzó ejecutándose localmente sobre Kubernetes con Docker, Helm y Argo CD, y actualmente está evolucionando hacia una arquitectura en **AWS administrada mediante Terraform y automatizada con GitHub Actions**.
 
 ---
 
-## 🏗️ Arquitectura
+## 🏗️ Arquitectura actual
 
 ```text
                     ┌──────────────────────┐
@@ -30,49 +32,61 @@ El proyecto permite administrar toda la infraestructura de la aplicación de for
              ┌─────────────────┼─────────────────┐
              │                 │                 │
              ▼                 ▼                 ▼
-      ┌────────────┐   ┌──────────────┐   ┌──────────────┐
-      │  Frontend  │   │   Product    │   │    Order     │
-      │   Nginx    │   │   Service    │   │   Service    │
-      │   :8080    │   │ Flask :5000  │   │ Flask :5001  │
-      └────────────┘   └──────────────┘   └──────────────┘
-             │                 │                 │
-             └─────────────────┴─────────────────┘
+      ┌────────────┐    ┌──────────────┐   ┌──────────────┐
+      │  Frontend  │    │   Product    │   │    Order     │
+      │   Nginx    │    │   Service    │   │   Service    │
+      │   :8080    │    │ Flask :5000  │   │ Flask :5001  │
+      └────────────┘    └──────────────┘   └──────────────┘
                                │
-                        Kubernetes Cluster
+                               ▼
+                      Kubernetes Cluster
 ```
 
 ---
 
-## 🚀 Flujo DevOps / GitOps
+## ☁️ Evolución hacia AWS
+
+La siguiente etapa del laboratorio incorpora infraestructura Cloud en AWS utilizando Terraform.
 
 ```text
-Código fuente
-     │
-     ▼
-Docker Images
-     │
-     ▼
-Kubernetes
-     │
-     ▼
-Helm Chart
-     │
-     ▼
-GitHub Repository
-     │
-     ▼
-Argo CD
-     │
-     ▼
-Kubernetes Sync
-     │
-     ▼
-CloudShop
+Developer
+    │
+    │ git push
+    ▼
+GitHub
+    │
+    ▼
+GitHub Actions
+    │
+    │ OIDC
+    ▼
+AWS IAM Role
+    │
+    ▼
+Terraform
+    │
+    ▼
+AWS
+    │
+    ├── VPC
+    ├── Public Subnet
+    ├── Private Subnet
+    ├── Internet Gateway
+    ├── Route Tables
+    └── Security Groups
 ```
 
-Git funciona como la fuente de verdad del estado deseado de la aplicación.
+La infraestructura se define mediante **Infrastructure as Code (IaC)**, permitiendo crear ambientes reproducibles y versionados.
 
-Argo CD compara continuamente la configuración almacenada en Git con el estado desplegado en Kubernetes.
+Actualmente el módulo base de networking contiene:
+
+- VPC
+- Subnet pública
+- Subnet privada
+- Internet Gateway
+- Route Table
+- Route Table Association
+- Security Group
 
 ---
 
@@ -86,8 +100,6 @@ Argo CD compara continuamente la configuración almacenada en Git con el estado 
 
 ### Product Service
 
-Endpoint:
-
 ```bash
 GET /products
 ```
@@ -100,8 +112,6 @@ curl http://192.168.49.2/api/products
 
 ### Order Service
 
-Endpoint:
-
 ```bash
 POST /orders
 ```
@@ -112,24 +122,12 @@ POST /orders
 
 Cada microservicio dispone de su propia imagen Docker.
 
-Ejemplo:
-
 ```bash
 docker build -t cloudshop/frontend:v1 ./frontend
+
 docker build -t cloudshop/product-service:v1 ./product-service
+
 docker build -t cloudshop/order-service:v1 ./order-service
-```
-
-Durante la prueba final se creó una nueva versión del frontend:
-
-```bash
-minikube image build -t cloudshop/frontend:v2 ./frontend
-```
-
-Verificación:
-
-```bash
-minikube image ls | grep cloudshop
 ```
 
 ---
@@ -150,8 +148,8 @@ La aplicación utiliza:
 - ClusterIP Services
 - NGINX Ingress
 - Namespace dedicado
-- Requests y Limits de recursos
-- Escalamiento horizontal mediante réplicas
+- Requests y Limits
+- Escalamiento mediante réplicas
 
 Ver recursos:
 
@@ -161,9 +159,9 @@ kubectl get all -n cloudshop
 
 ---
 
-## 🌐 Networking
+## 🌐 Networking Kubernetes
 
-La comunicación entre microservicios utiliza DNS interno de Kubernetes.
+La comunicación entre microservicios utiliza el DNS interno de Kubernetes.
 
 ```text
 frontend
@@ -171,7 +169,7 @@ product-service
 order-service
 ```
 
-El tráfico externo entra mediante NGINX Ingress.
+El tráfico HTTP se enruta mediante NGINX Ingress.
 
 | Ruta | Servicio |
 |---|---|
@@ -179,23 +177,15 @@ El tráfico externo entra mediante NGINX Ingress.
 | `/api/products` | product-service |
 | `/api/orders` | order-service |
 
-Ejemplo:
-
-```bash
-curl http://192.168.49.2/
-curl http://192.168.49.2/api/products
-```
-
 ---
 
 ## ⎈ Helm
 
-Toda la aplicación puede desplegarse utilizando un único Helm Chart.
-
-Estructura:
+La aplicación puede desplegarse utilizando un único Helm Chart.
 
 ```text
 helm/cloudshop/
+
 ├── Chart.yaml
 ├── values.yaml
 ├── values-dev.yaml
@@ -205,7 +195,7 @@ helm/cloudshop/
 
 Esto permite reutilizar el mismo Chart para diferentes ambientes.
 
-### DEV
+Ejemplo DEV:
 
 ```bash
 helm upgrade --install cloudshop ./helm/cloudshop \
@@ -213,40 +203,11 @@ helm upgrade --install cloudshop ./helm/cloudshop \
   -f ./helm/cloudshop/values-dev.yaml
 ```
 
-### PROD
-
-```bash
-helm upgrade --install cloudshop ./helm/cloudshop \
-  -n cloudshop \
-  -f ./helm/cloudshop/values-prod.yaml
-```
-
 ---
 
 ## 🔄 GitOps con Argo CD
 
-Argo CD administra el despliegue de CloudShop tomando GitHub como fuente de verdad.
-
-Configuración:
-
-```text
-Repository:
-github.com/jusefe11/cloudshop
-
-Branch:
-main
-
-Path:
-helm/cloudshop
-
-Values:
-values-prod.yaml
-
-Namespace:
-cloudshop
-```
-
-Flujo:
+Argo CD administra el estado deseado de CloudShop utilizando GitHub como fuente de verdad.
 
 ```text
 Developer
@@ -258,7 +219,7 @@ GitHub
     ▼
 Argo CD
     │
-    │ Detecta diferencia
+    │ Detecta cambios
     ▼
 OutOfSync
     │
@@ -270,135 +231,139 @@ Kubernetes
 Synced + Healthy
 ```
 
----
-
-## 🧪 Prueba GitOps — Escalamiento
-
-Se modificó el estado deseado del Product Service desde Git:
-
-```yaml
-product:
-  replicaCount: 3
-```
-
-a:
-
-```yaml
-product:
-  replicaCount: 4
-```
-
-Después del commit y sincronización mediante Argo CD:
-
-```bash
-kubectl get deployment product-service -n cloudshop
-```
-
-Resultado:
+Repositorio:
 
 ```text
-NAME              READY   UP-TO-DATE   AVAILABLE
-product-service   4/4     4            4
+github.com/jusefe11/cloudshop
 ```
 
-Esto confirmó el escalamiento declarativo mediante GitOps.
+Branch:
+
+```text
+main
+```
+
+Path:
+
+```text
+helm/cloudshop
+```
 
 ---
 
-## 🚀 Prueba End-to-End — Frontend v2
+# 🟣 Terraform — Infrastructure as Code
 
-Como prueba final se realizó un cambio real sobre el código del frontend.
+La infraestructura AWS se administra mediante Terraform.
 
-### 1. Modificación
-
-Se agregó:
-
-```html
-<h2>CloudShop - Despliegue GitOps con Argo CD</h2>
-<p>Versión 2 desplegada automáticamente desde GitHub.</p>
-```
-
-### 2. Nueva imagen
-
-```bash
-minikube image build \
-  -t cloudshop/frontend:v2 \
-  ./frontend
-```
-
-### 3. Helm
-
-`values-prod.yaml`:
-
-```yaml
-frontend:
-  replicaCount: 2
-  image:
-    tag: v2
-```
-
-### 4. Git
-
-```bash
-git add .
-git commit -m "Deploy frontend v2 with GitOps"
-git push origin main
-```
-
-Commit utilizado:
+Estructura actual:
 
 ```text
-ab1fa2a Deploy frontend v2 with GitOps
+terraform/
+│
+├── environments/
+│   ├── dev/
+│   │   ├── main.tf
+│   │   ├── providers.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   │
+│   ├── qa/
+│   └── prod/
+│
+└── modules/
+    └── vpc/
+        ├── main.tf
+        ├── variables.tf
+        └── outputs.tf
 ```
 
-### 5. Argo CD
+El diseño separa los **módulos reutilizables** de la configuración específica de cada ambiente.
 
-Argo CD detectó el nuevo estado:
-
-```text
-Synced to main (ab1fa2a)
-Sync OK
-```
-
-### 6. Kubernetes
+### Validación Terraform
 
 ```bash
-kubectl get deployment frontend -n cloudshop
+terraform fmt -recursive
+terraform init
+terraform validate
+terraform plan
 ```
 
-Resultado:
+El módulo VPC actualmente genera un plan de:
 
 ```text
-frontend   2/2   2   2
+Plan: 7 to add, 0 to change, 0 to destroy.
 ```
 
-Imagen desplegada:
+> Por seguridad y control de costos, esta etapa del laboratorio valida la infraestructura con `terraform plan` sin ejecutar `terraform apply`.
 
-```bash
-kubectl get deployment frontend -n cloudshop \
-  -o jsonpath='{.spec.template.spec.containers[0].image}'
-```
+---
 
-Resultado:
+## 🔐 Seguridad
+
+El proyecto aplica buenas prácticas como:
+
+- Separación de subnets públicas y privadas.
+- Security Groups.
+- Variables sensibles excluidas de Git.
+- Estados Terraform excluidos del repositorio.
+- `.terraform/` excluido del repositorio.
+- Uso progresivo de IAM con mínimo privilegio.
+- Integración prevista de GitHub Actions con AWS mediante OIDC.
+- Sin credenciales permanentes de AWS almacenadas en GitHub.
+
+---
+
+## 🚀 CI/CD
+
+La siguiente etapa incorpora GitHub Actions.
 
 ```text
-cloudshop/frontend:v2
+Developer
+    │
+    │ git push
+    ▼
+GitHub
+    │
+    ▼
+GitHub Actions
+    │
+    ├── terraform fmt
+    ├── terraform init
+    ├── terraform validate
+    └── terraform plan
+    │
+    ▼
+AWS mediante OIDC
 ```
 
-### 7. Validación HTTP
+Posteriormente el pipeline evolucionará para construir imágenes Docker y publicarlas en Amazon ECR.
 
-```bash
-curl http://192.168.49.2/
+---
+
+## 🎯 Roadmap AWS
+
+```text
+Terraform
+   │
+   ├── VPC              ✅ Código creado
+   │
+   ├── Subnets          ✅ Código creado
+   │
+   ├── Internet Gateway ✅ Código creado
+   │
+   ├── Route Tables     ✅ Código creado
+   │
+   ├── Security Groups  ✅ Código creado
+   │
+   ├── IAM / OIDC       ⏳
+   ├── ECR              ⏳
+   ├── EKS              ⏳
+   ├── RDS              ⏳
+   ├── ALB              ⏳
+   ├── CloudWatch       ⏳
+   ├── SQS / SNS        ⏳
+   └── Lambda           ⏳
 ```
-
-Resultado:
-
-```html
-<h2>CloudShop - Despliegue GitOps con Argo CD</h2>
-<p>Versión 2 desplegada automáticamente desde GitHub.</p>
-```
-
-✅ El cambio realizado en el código llegó correctamente hasta Kubernetes utilizando el flujo GitOps.
 
 ---
 
@@ -425,11 +390,15 @@ cloudshop/
 │
 ├── helm/
 │   └── cloudshop/
-│       ├── Chart.yaml
-│       ├── values.yaml
-│       ├── values-dev.yaml
-│       ├── values-prod.yaml
-│       └── templates/
+│
+├── terraform/
+│   ├── environments/
+│   │   ├── dev/
+│   │   ├── qa/
+│   │   └── prod/
+│   │
+│   └── modules/
+│       └── vpc/
 │
 └── README.md
 ```
@@ -438,25 +407,23 @@ cloudshop/
 
 ## 🛠️ Tecnologías
 
-- Docker
-- Kubernetes
-- Minikube
-- Helm
-- Argo CD
-- Git
-- GitHub
-- NGINX
-- Python
-- Flask
-- Linux
+**Cloud:** AWS  
+**IaC:** Terraform  
+**Containers:** Docker  
+**Orchestration:** Kubernetes / Minikube  
+**Package Manager:** Helm  
+**GitOps:** Argo CD  
+**CI/CD:** GitHub Actions  
+**Frontend:** NGINX  
+**Backend:** Python / Flask  
+**Version Control:** Git / GitHub  
+**Operating System:** Linux
 
 ---
 
 ## 🎯 Conceptos implementados
 
-Este laboratorio demuestra conocimientos prácticos en:
-
-**DevOps · GitOps · Microservicios · Contenedores · Kubernetes · Helm · Argo CD · Ingress · Service Discovery · Escalamiento · Deployments · Versionamiento · Rollouts**
+**DevOps · GitOps · AWS · Infrastructure as Code · Terraform · Microservicios · Docker · Kubernetes · Helm · Argo CD · Ingress · Service Discovery · Networking · IAM · CI/CD · Escalamiento · Versionamiento**
 
 ---
 
@@ -467,4 +434,4 @@ Este laboratorio demuestra conocimientos prácticos en:
 Ingeniero Electrónico | Especialista en Seguridad Informática  
 Cloud & DevOps Engineer
 
-Proyecto desarrollado como laboratorio práctico de arquitectura DevOps, Kubernetes y GitOps.
+Proyecto desarrollado como laboratorio práctico de **Cloud Computing, AWS, DevOps, Kubernetes, Terraform y GitOps**.
