@@ -1,0 +1,8 @@
+frontend:
+  replicaCount: 1
+
+product:
+  replicaCount: 1
+
+order:
+  replicaCount: 1

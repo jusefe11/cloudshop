@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CloudShop - Microservices Dashboard</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f7fb;
+    margin: 0;
+    color: #1f2937;
+}
+
+header {
+    background: #111827;
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 10px rgba(0,0,0,.08);
+}
+
+.product {
+    border-bottom: 1px solid #ddd;
+    padding: 15px 0;
+}
+
+button {
+    background: #2563eb;
+    color: white;
+    border: 0;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+.online {
+    color: #16a34a;
+    font-weight: bold;
+}
+
+.offline {
+    color: #dc2626;
+    font-weight: bold;
+}
+
+code {
+    background: #e5e7eb;
+    padding: 4px 7px;
+    border-radius: 4px;
+}
+
+@media(max-width:700px) {
+    .status-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+    <script src="/config.js"></script>
+</head>
+
+<body>
+
+<header>
+    <h1>☁️ <span id="store-title">CloudShop</span></h1>
+    <p>Microservices & GitOps Dashboard</p>
+</header>
+
+<div class="container">
+
+<div class="status-grid">
+
+<div class="card">
+    <h3>🌐 Frontend</h3>
+    <p class="online">● ONLINE</p>
+    <p>Nginx :8080</p>
+</div>
+
+<div class="card">
+    <h3>📦 Product Service</h3>
+    <p id="product-status">Comprobando...</p>
+    <p><code>GET /api/products</code></p>
+</div>
+
+<div class="card">
+    <h3>🧾 Order Service</h3>
+    <p id="order-status">Comprobando...</p>
+    <p><code>GET /api/orders</code></p>
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>📦 Productos</h2>
+
+<p>
+Productos obtenidos en tiempo real desde
+<code>product-service</code>
+</p>
+
+<div id="products">
+Cargando productos...
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>🧾 Órdenes</h2>
+
+<p>
+Las órdenes son administradas por
+<code>order-service</code>
+</p>
+
+<button onclick="loadOrders()">Actualizar órdenes</button>
+
+<div id="orders">
+Cargando órdenes...
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h2>⚙️ Arquitectura</h2>
+
+<pre>
+Browser
+   │
+   ▼
+NGINX Ingress
+   │
+   ├── /              → Frontend :8080
+   │
+   ├── /api/products  → Product Service :5000
+   │
+   └── /api/orders    → Order Service :5001
+</pre>
+
+<p>
+Desplegado con Kubernetes + Helm + Argo CD
+</p>
+
+</div>
+
+</div>
+
+
+<script>
+
+async function loadProducts() {
+
+    const status = document.getElementById("product-status");
+
+    try {
+
+        const response = await fetch("/api/products");
+
+        if (!response.ok)
+            throw new Error();
+
+        const products = await response.json();
+
+        status.innerHTML = "● ONLINE";
+        status.className = "online";
+
+        let html = "";
+
+        products.forEach(product => {
+
+            html += `
+            <div class="product">
+
+                <h3>${product.name}</h3>
+
+                <p>
+                Precio:
+                $${product.price.toLocaleString("es-CO")}
+                </p>
+
+                <button onclick="createOrder(${product.id})">
+                Comprar
+                </button>
+
+            </div>
+            `;
+
+        });
+
+        document.getElementById("products").innerHTML = html;
+
+    }
+    catch {
+
+        status.innerHTML = "● OFFLINE";
+        status.className = "offline";
+
+        document.getElementById("products").innerHTML =
+        "No se pudo conectar con Product Service";
+
+    }
+
+}
+
+
+async function createOrder(productId) {
+
+    try {
+
+        const response = await fetch("/api/orders", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                product_id: productId,
+                quantity: 1
+            })
+
+        });
+
+        if (!response.ok)
+            throw new Error();
+
+        const order = await response.json();
+
+        alert(
+            "Orden creada correctamente. ID: " + order.id
+        );
+
+        loadOrders();
+
+    }
+    catch {
+
+        alert("Error conectando con Order Service");
+
+    }
+
+}
+
+
+async function loadOrders() {
+
+    const status = document.getElementById("order-status");
+
+    try {
+
+        const response = await fetch("/api/orders");
+
+        if (!response.ok)
+            throw new Error();
+
+        const orders = await response.json();
+
+        status.innerHTML = "● ONLINE";
+        status.className = "online";
+
+        if (orders.length === 0) {
+
+            document.getElementById("orders").innerHTML =
+            "<p>No existen órdenes todavía.</p>";
+
+            return;
+
+        }
+
+        let html = "<ul>";
+
+        orders.forEach(order => {
+
+            html += `
+            <li>
+            Orden #${order.id}
+            — Producto ${order.product_id}
+            — Cantidad ${order.quantity}
+            </li>
+            `;
+
+        });
+
+        html += "</ul>";
+
+        document.getElementById("orders").innerHTML = html;
+
+    }
+    catch {
+
+        status.innerHTML = "● OFFLINE";
+        status.className = "offline";
+
+        document.getElementById("orders").innerHTML =
+        "No se pudo conectar con Order Service";
+
+    }
+
+}
+
+
+loadProducts();
+loadOrders();
+
+</script>
+
+    <script>
+      if (window.CLOUDSHOP_CONFIG && window.CLOUDSHOP_CONFIG.APP_TITLE) {
+        document.getElementById("store-title").textContent = window.CLOUDSHOP_CONFIG.APP_TITLE;
+        document.title = window.CLOUDSHOP_CONFIG.APP_TITLE;
+      }
+    </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+frontend:
+  replicaCount: 2
+
+  image:
+    repository: cloudshop/frontend
+    tag: v1
+    pullPolicy: Never
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+
+product:
+  replicaCount: 2
+
+  image:
+    repository: cloudshop/product-service
+    tag: v1
+    pullPolicy: Never
+
+  service:
+    type: ClusterIP
+    port: 5000
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+order:
+  replicaCount: 2
+
+  image:
+    repository: cloudshop/order-service
+    tag: v1
+    pullPolicy: Never
+
+  service:
+    type: ClusterIP
+    port: 5001
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+ingress:
+  enabled: true
+  className: nginx

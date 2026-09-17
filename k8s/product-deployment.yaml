@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  namespace: cloudshop
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: product-service
+
+  template:
+    metadata:
+      labels:
+        app: product-service
+
+    spec:
+      containers:
+        - name: product-service
+          image: cloudshop/product-service:v1
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 5000

@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  namespace: cloudshop
+spec:
+  replicas: {{ .Values.product.replicaCount }}
+  selector:
+    matchLabels:
+      app: product-service
+  template:
+    metadata:
+      labels:
+        app: product-service
+    spec:
+      containers:
+        - name: product-service
+          image: "{{ .Values.product.image.repository }}:{{ .Values.product.image.tag }}"
+          imagePullPolicy: {{ .Values.product.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.product.service.port }}
+          resources:
+            requests:
+              cpu: {{ .Values.product.resources.requests.cpu }}
+              memory: {{ .Values.product.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.product.resources.limits.cpu }}
+              memory: {{ .Values.product.resources.limits.memory }}
