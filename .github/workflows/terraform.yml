@@ -1,0 +1,67 @@
+name: Terraform CI - CloudShop
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+      - ".github/workflows/terraform.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+      - ".github/workflows/terraform.yml"
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: us-east-1
+
+  TF_VAR_aws_region: us-east-1
+  TF_VAR_project_name: cloudshop
+  TF_VAR_environment: dev
+  TF_VAR_vpc_cidr: 10.0.0.0/16
+  TF_VAR_public_subnet_cidr: 10.0.1.0/24
+  TF_VAR_private_subnet_cidr: 10.0.2.0/24
+  TF_VAR_availability_zone: us-east-1a
+
+jobs:
+  terraform:
+    name: Terraform Validate and Plan
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: terraform/environments/dev
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.8
+
+      - name: Autenticarse en AWS mediante OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::014668143169:role/cloudshop-aws
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Format
+        run: terraform fmt -check -recursive
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -no-color
