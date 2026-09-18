@@ -13,3 +13,8 @@ output "private_subnet_id" {
 output "security_group_id" {
   value = module.vpc.security_group_id
 }
+
+output "ecr_repository_urls" {
+  description = "URLs de los repositorios ECR de CloudShop"
+  value       = module.ecr.repository_urls
+}
