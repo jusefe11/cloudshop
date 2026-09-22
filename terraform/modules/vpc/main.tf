@@ -26,6 +26,8 @@ resource "aws_subnet" "public" {
     Name        = "${var.project_name}-${var.environment}-public-subnet-${count.index + 1}"
     Environment = var.environment
     Project     = var.project_name
+
+    "kubernetes.io/role/elb" = "1"
   }
 }
 
@@ -44,6 +46,8 @@ resource "aws_subnet" "private" {
     Name        = "${var.project_name}-${var.environment}-private-subnet-${count.index + 1}"
     Environment = var.environment
     Project     = var.project_name
+
+    "kubernetes.io/role/internal-elb" = "1"
   }
 }
 
