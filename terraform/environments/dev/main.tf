@@ -1,13 +1,15 @@
 module "vpc" {
   source = "../../modules/vpc"
 
-  project_name        = var.project_name
-  environment         = var.environment
-  vpc_cidr            = var.vpc_cidr
-  public_subnet_cidr  = var.public_subnet_cidr
-  private_subnet_cidr = var.private_subnet_cidr
-  availability_zone   = var.availability_zone
+  project_name = var.project_name
+  environment  = var.environment
+  vpc_cidr     = var.vpc_cidr
+
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
+  availability_zones   = var.availability_zones
 }
+
 module "ecr" {
   source = "../../modules/ecr"
 
