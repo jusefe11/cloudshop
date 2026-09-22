@@ -3,14 +3,14 @@ output "vpc_id" {
   value       = aws_vpc.main.id
 }
 
-output "public_subnet_id" {
-  description = "ID de la subnet publica"
-  value       = aws_subnet.public.id
+output "public_subnet_ids" {
+  description = "IDs de las subnets publicas"
+  value       = aws_subnet.public[*].id
 }
 
-output "private_subnet_id" {
-  description = "ID de la subnet privada"
-  value       = aws_subnet.private.id
+output "private_subnet_ids" {
+  description = "IDs de las subnets privadas"
+  value       = aws_subnet.private[*].id
 }
 
 output "security_group_id" {
